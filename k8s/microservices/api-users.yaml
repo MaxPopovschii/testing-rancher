@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-users
+  namespace: dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-users
+  template:
+    metadata:
+      labels:
+        app: api-users
+    spec:
+      containers:
+      - name: api-users
+        image: ghcr.io/maxpopovschii/api-users:latest
+        env:
+        - name: DB_HOST
+          value: postgres
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: msuser
+        - name: DB_PASSWORD
+          value: mspassword
+        - name: DB_NAME
+          value: microservices
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-users
+  namespace: dev
+spec:
+  selector:
+    app: api-users
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

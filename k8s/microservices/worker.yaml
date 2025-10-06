@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: ghcr.io/maxpopovschii/worker:latest
+        env:
+        - name: RABBITMQ_HOST
+          value: rabbitmq
+        - name: RABBITMQ_PORT
+          value: "5672"
+        ports:
+        - containerPort: 9000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: dev
+spec:
+  selector:
+    app: worker
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+  type: ClusterIP

@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-rabbitmq-from-workers
+  namespace: dev
+spec:
+  podSelector:
+    matchLabels:
+      app: rabbitmq
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: worker
+    - podSelector:
+        matchLabels:
+          app: api-notifications
+    ports:
+    - protocol: TCP
+      port: 5672
+  policyTypes:
+  - Ingress

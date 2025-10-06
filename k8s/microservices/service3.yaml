@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service3
+  namespace: dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: service3
+  template:
+    metadata:
+      labels:
+        app: service3
+    spec:
+      containers:
+      - name: service3
+        image: nginxdemos/hello:plain-text
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: microservice-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service3
+  namespace: dev
+spec:
+  selector:
+    app: service3
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
